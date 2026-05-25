@@ -1,47 +1,72 @@
 # DevOps CI/CD Project
 
-A production-style DevOps pipeline built from scratch — Dockerized Python app with automated CI/CD, cloud deployment, and real-time monitoring.
+A Dockerized Python/Flask Task Manager with a fully automated CI/CD pipeline,
+cloud deployment on Render, and real-time monitoring via Prometheus.
 
-## Live Demo
-- App: https://devops-project-gexv.onrender.com
-- Health: https://devops-project-gexv.onrender.com/health
-- Metrics: https://devops-project-gexv.onrender.com/metrics
-
-## Architecture
-
-Code Push → GitHub Actions → Run Tests (pytest) → Build Docker Image → Push to Docker Hub → Auto-Deploy on Render → Prometheus Monitoring
+## Live URLs
+| Endpoint | Purpose |
+|----------|---------|
+| `/` | Task Manager app |
+| `/health` | Health check (JSON) |
+| `/metrics` | Prometheus metrics |
 
 ## Tech Stack
-| Tool | Purpose |
-|---|---|
-| Python + Flask | Web application |
-| Docker | Containerization |
-| GitHub Actions | CI/CD pipeline |
-| pytest | Automated testing |
-| Docker Hub | Image registry |
-| Render | Cloud deployment |
-| Prometheus | Monitoring & metrics |
+- **App:** Python, Flask
+- **Containerization:** Docker, Docker Compose
+- **CI/CD:** GitHub Actions
+- **Testing:** pytest
+- **Registry:** Docker Hub
+- **Deployment:** Render
+- **Monitoring:** Prometheus
 
-## Pipeline Flow
-Every time code is pushed to `main`:
-1. GitHub Actions triggers automatically
-2. pytest runs all tests
-3. If tests pass → Docker image is built
-4. Image is pushed to Docker Hub
-5. Render auto-deploys the new version
-6. App is live with zero manual steps
+## Project Structure
+devops-project/
+├── app/
+│   ├── app.py           # Flask application
+│   └── test_app.py      # pytest tests
+├── .github/workflows/
+│   └── ci-cd.yml        # GitHub Actions pipeline
+├── docker-compose.yml   # Local dev with Prometheus
+├── prometheus.yml       # Prometheus scrape config
+├── Dockerfile           # Container definition
+└── requirements.txt     # Python dependencies
 
-## How to Run Locally
-```bash
-git clone https://github.com/mahived7/devops-project.git
-cd devops-project
-docker build -t devops-project .
-docker run -p 5000:5000 devops-project
+## CI/CD Pipeline
+Every push to `main` triggers:
+1. **Test** — pytest runs all tests automatically
+2. **Build** — Docker image is built
+3. **Push** — Image pushed to Docker Hub
+4. **Deploy** — Render auto-deploys the new image
+
+If tests fail, the pipeline stops — broken code never reaches production.
+
+## Secrets Management
+All sensitive credentials are stored as **GitHub Secrets** —
+never hardcoded in code.
+
+| Secret Name | What it stores |
+|-------------|---------------|
+| `DOCKERHUB_USERNAME` | Docker Hub username |
+| `DOCKERHUB_TOKEN` | Docker Hub access token |
+| `RENDER_DEPLOY_HOOK` | Render deployment webhook URL |
+
+These are referenced in the GitHub Actions workflow as:
+```yaml
+${{ secrets.DOCKERHUB_USERNAME }}
+${{ secrets.DOCKERHUB_TOKEN }}
+${{ secrets.RENDER_DEPLOY_HOOK }}
 ```
-Open http://localhost:5000
+Secrets are encrypted by GitHub, never visible in logs,
+and never exposed in the repository.
 
-## Resume Highlights
-- Built end-to-end CI/CD pipeline with GitHub Actions — zero manual deployment
-- Dockerized Python/Flask app deployed live on cloud (Render)
-- Automated testing with pytest on every commit
-- Real-time monitoring via Prometheus metrics endpoint
+## Run Locally with Docker Compose
+```bash
+docker-compose up --build
+```
+- App: http://localhost:5000
+- Prometheus: http://localhost:9090
+
+## Run Tests
+```bash
+pytest app/test_app.py -v
+```
